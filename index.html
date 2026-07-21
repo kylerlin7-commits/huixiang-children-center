@@ -170,6 +170,58 @@ tr:hover{background:var(--color-muted)}
   .form-row{grid-template-columns:1fr}
   .grid-2,.grid-3{grid-template-columns:1fr}
 }
+/* ===== New: Checkbox group for selectable items ===== */
+.check-group{display:flex;flex-wrap:wrap;gap:10px;padding:8px 0}
+.check-item{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--color-border);border-radius:20px;font-size:13px;cursor:pointer;transition:var(--transition);background:var(--color-surface);user-select:none}
+.check-item:hover{border-color:var(--color-primary);background:#EEF2FF}
+.check-item input{width:auto;margin:0;cursor:pointer}
+.check-item.checked{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+.check-item.checked input{accent-color:#fff}
+.check-group-vertical{display:flex;flex-direction:column;gap:8px}
+.check-group-vertical .check-item{width:fit-content}
+/* ===== New: Detail view ===== */
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.detail-item{padding:12px 14px;background:var(--color-muted);border-radius:var(--radius-sm);border-left:3px solid var(--color-primary)}
+.detail-item .label{font-size:12px;color:var(--color-text-muted);margin-bottom:4px}
+.detail-item .value{font-size:14px;font-weight:500;word-break:break-all}
+.detail-item.full{grid-column:1/-1}
+/* ===== New: Printable export ===== */
+.print-area{display:none}
+@media print{
+  .sidebar,.topbar,.modal-overlay,.no-print{display:none!important}
+  .main{margin-left:0!important}
+  .print-area{display:block}
+  .print-area .print-title{text-align:center;font-size:20px;font-weight:700;margin:16px 0 8px}
+  .print-area .print-subtitle{text-align:center;font-size:13px;color:#333;margin-bottom:12px}
+  .print-area table{width:100%;border-collapse:collapse;font-size:11px}
+  .print-area th,.print-area td{border:1px solid #333;padding:4px 6px;text-align:left;word-break:break-all}
+  .print-area th{background:#eee;font-weight:600}
+  .print-area .print-footer{margin-top:12px;font-size:12px;color:#333;display:flex;justify-content:space-between}
+  body{background:#fff}
+  .content{padding:0}
+}
+.print-title{font-size:20px;font-weight:700;text-align:center;margin:8px 0 4px}
+.print-subtitle{font-size:13px;color:var(--color-text-muted);text-align:center;margin-bottom:12px}
+.export-summary-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.export-summary-table th,.export-summary-table td{border:1px solid #333;padding:6px 8px;text-align:left;word-break:break-all}
+.export-summary-table th{background:var(--color-muted);font-weight:600}
+/* ===== New: Material file icon ===== */
+.file-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.file-icon.word{background:#2B579A}
+.file-icon.excel{background:#217346}
+.file-icon.pdf{background:#D13438}
+.file-icon.default{background:var(--color-text-muted)}
+.file-list-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);margin-bottom:8px;transition:var(--transition)}
+.file-list-item:hover{border-color:var(--color-primary);background:var(--color-muted)}
+.file-list-item .file-info{flex:1;min-width:0}
+.file-list-item .file-name{font-size:13px;font-weight:500;word-break:break-all}
+.file-list-item .file-meta{font-size:11px;color:var(--color-text-muted);margin-top:2px}
+/* ===== New: Permission layout matrix ===== */
+.perm-matrix{width:100%;border-collapse:collapse;font-size:13px}
+.perm-matrix th,.perm-matrix td{border:1px solid var(--color-border);padding:8px 10px;text-align:left;vertical-align:top}
+.perm-matrix th{background:var(--color-muted);font-weight:600}
+.perm-matrix .perm-role{font-weight:600;white-space:nowrap}
+.perm-tag{display:inline-block;padding:2px 8px;margin:2px;font-size:11px;background:#E0E7FF;color:#3730A3;border-radius:4px}
 </style>
 </head>
 <body data-current-role="parent">
@@ -320,22 +372,33 @@ const NAV_MENUS = {
     { section:'人员管理', items:[
       {key:'admin-account',label:'账号开通',icon:'👤'},
       {key:'admin-role',label:'角色权限分配',icon:'🔑'},
+      {key:'admin-permission-layout',label:'权限布局',icon:'🧩'},
       {key:'admin-attendance',label:'员工考勤',icon:'🕐'},
       {key:'admin-hr',label:'人事审核',icon:'📋'}
     ]},
-    { section:'教务辅助', items:[
+    { section:'档案信息管理', items:[
+      {key:'admin-teacher-detail',label:'教师信息管理',icon:'👩‍🏫'},
+      {key:'admin-child-info',label:'儿童信息管理',icon:'🧒'},
+      {key:'admin-parent-info',label:'家长信息管理',icon:'👨‍👩‍👧'},
       {key:'admin-student-file',label:'学员档案录入',icon:'📁'},
       {key:'admin-new-student',label:'新生建档',icon:'✨'},
       {key:'admin-transfer',label:'转班/结业管理',icon:'🔄'}
     ]},
-    { section:'统筹排课', items:[
-      {key:'admin-master-schedule',label:'总课表',icon:'📅'},
+    { section:'诉求处理', items:[
+      {key:'admin-complaint-handle',label:'诉求处理',icon:'✉️'},
       {key:'admin-parent-demand',label:'家长课程诉求',icon:'💬'}
+    ]},
+    { section:'统筹排课', items:[
+      {key:'admin-master-schedule',label:'总课表',icon:'📅'}
+    ]},
+    { section:'素材与导出', items:[
+      {key:'admin-material',label:'素材格式管理',icon:'📎'},
+      {key:'admin-export',label:'数据统计导出',icon:'📤'},
+      {key:'admin-export-summary',label:'咨询汇总表导出',icon:'🖨️'}
     ]},
     { section:'全局设置', items:[
       {key:'admin-announce',label:'机构公告/资讯',icon:'📢'},
-      {key:'admin-config',label:'小程序配置',icon:'⚙️'},
-      {key:'admin-export',label:'数据统计导出',icon:'📤'}
+      {key:'admin-config',label:'小程序配置',icon:'⚙️'}
     ]}
   ]
 };
@@ -491,6 +554,42 @@ function seedData(){
     intro:'专注儿童康复训练的专业机构',
     openHours:'周一至周五 8:30-17:30'
   });
+  /* ===== New: Teacher detailed info ===== */
+  DB.set('teacherDetails', [
+    { id:'td1', teacherId:'t1', name:'李老师', birthDate:'1995-04-12', idCard:'4405**********1234', phone:'13800001111', education:'本科', major:'特殊教育', certificates:'教师资格证,康复师资格证,ABA行为分析师证书,孤独症康复从业人员培训证书', hukouAddr:'广东省汕头市金平区XX路XX号', joinDate:'2023-06-01', regularDate:'2023-09-01', signDate:'2023-06-01', expireDate:'2026-06-01', remark:'擅长语言训练' },
+    { id:'td2', teacherId:'t2', name:'王老师', birthDate:'1993-08-25', idCard:'4405**********5678', phone:'13800002222', education:'硕士', major:'应用心理学', certificates:'教师资格证,心理咨询师二级,感统训练师证书,沙盘游戏治疗师证书,PEP-3评估员证书', hukouAddr:'广东省汕头市龙湖区XX路XX号', joinDate:'2022-09-01', regularDate:'2022-12-01', signDate:'2022-09-01', expireDate:'2025-09-01', remark:'擅长感统训练' },
+    { id:'td3', teacherId:'t3', name:'张主管', birthDate:'1988-11-30', idCard:'4405**********9012', phone:'13800003333', education:'硕士', major:'特殊教育学', certificates:'教师资格证,孤独症康复骨干教师证书,VB-MAPP评估员证书,督导教师证书,机构管理培训证书,融合教育指导师证书', hukouAddr:'广东省汕头市濠江区XX路XX号', joinDate:'2021-03-01', regularDate:'2021-06-01', signDate:'2021-03-01', expireDate:'2027-03-01', remark:'教学主管' }
+  ]);
+  /* ===== New: Child detailed info ===== */
+  DB.set('childDetails', [
+    { id:'cd1', childName:'小明', gender:'男', birthDate:'2021-05-08', origin:'广东汕头', guardian1:'林先生', guardian2:'陈女士', phone1:'13900001111', phone2:'13900002222', homeAddr:'汕头市金平区XX路XX号', diagnosis:'孤独症谱系障碍', consultDate:'2024-02-20', enrollDate:'2024-03-01', finishDate:'', consultContent:['课内'], guidance:['入训'], remark:'对声音敏感' },
+    { id:'cd2', childName:'小红', gender:'女', birthDate:'2022-08-15', origin:'广东揭阳', guardian1:'黄先生', guardian2:'吴女士', phone1:'13900003333', phone2:'13900004444', homeAddr:'汕头市龙湖区XX路XX号', diagnosis:'语言发育迟缓', consultDate:'2024-05-10', enrollDate:'2024-05-15', finishDate:'', consultContent:['课内','课外'], guidance:['入训'], remark:'喜欢音乐' },
+    { id:'cd3', childName:'小华', gender:'男', birthDate:'2020-03-20', origin:'广东潮州', guardian1:'刘先生', guardian2:'杨女士', phone1:'13900005555', phone2:'13900006666', homeAddr:'汕头市濠江区XX路XX号', diagnosis:'发育迟缓', consultDate:'2023-08-25', enrollDate:'2023-09-01', finishDate:'', consultContent:['课内','培训'], guidance:['入训','转介'], remark:'运动能力较弱' }
+  ]);
+  /* ===== New: Parent info ===== */
+  DB.set('parentInfos', [
+    { id:'pi1', phone:'13900001111', name:'林先生', child:'小明', relation:'父亲', childId:'cd1', remark:'工作日下班后可联系' },
+    { id:'pi2', phone:'13900002222', name:'陈女士', child:'小明', relation:'母亲', childId:'cd1', remark:'主要负责接送' },
+    { id:'pi3', phone:'13900003333', name:'黄先生', child:'小红', relation:'父亲', childId:'cd2', remark:'' },
+    { id:'pi4', phone:'13900004444', name:'吴女士', child:'小红', relation:'母亲', childId:'cd2', remark:'周末上课陪伴' },
+    { id:'pi5', phone:'13900005555', name:'刘先生', child:'小华', relation:'父亲', childId:'cd3', remark:'' },
+    { id:'pi6', phone:'13900006666', name:'杨女士', child:'小华', relation:'母亲', childId:'cd3', remark:'' }
+  ]);
+  /* ===== New: Materials (Word/Excel) ===== */
+  DB.set('materials', [
+    { id:'mt1', name:'7月训练计划模板.docx', type:'word', size:'32KB', category:'训练计划', uploadDate:'2026-07-01', uploader:'张主管', remark:'月度训练计划标准模板' },
+    { id:'mt2', name:'学员评估表模板.docx', type:'word', size:'45KB', category:'评估表', uploadDate:'2026-06-15', uploader:'张主管', remark:'入机构评估使用' },
+    { id:'mt3', name:'课时统计表.xlsx', type:'excel', size:'28KB', category:'课时统计', uploadDate:'2026-07-05', uploader:'王主任', remark:'月度课时汇总' },
+    { id:'mt4', name:'儿童信息汇总表.xlsx', type:'excel', size:'56KB', category:'档案管理', uploadDate:'2026-07-10', uploader:'王主任', remark:'儿童基本信息汇总' },
+    { id:'mt5', name:'家长满意度调查问卷.docx', type:'word', size:'38KB', category:'调查问卷', uploadDate:'2026-06-20', uploader:'王主任', remark:'季度满意度调查' }
+  ]);
+  /* ===== New: Permission layout ===== */
+  DB.set('permissionLayout', [
+    { id:'pl1', role:'parent', label:'家长', permissions:['parent-home','parent-courses','parent-plan','parent-performance','parent-report','parent-archive','parent-progress','parent-media','parent-notice','parent-payment','parent-renew','parent-leave','parent-booking','parent-chat','parent-qa','parent-complaint'], description:'查看儿童信息、缴费、请假、投诉' },
+    { id:'pl2', role:'teacher', label:'康复老师', permissions:['teacher-home','teacher-schedule','teacher-students','teacher-tasks','teacher-plan','teacher-data','teacher-upload','teacher-summary','teacher-feedback','teacher-reply','teacher-history','teacher-scheme','teacher-progress','teacher-hours-daily','teacher-hours-monthly'], description:'排课、记录训练数据、反馈、课时登记' },
+    { id:'pl3', role:'supervisor', label:'教学主管', permissions:['sup-home','sup-schedule','sup-coursetable','sup-leave-approve','sup-report-audit','sup-plan-audit','sup-data-audit','sup-quality','sup-all-progress','sup-research','sup-training','sup-collective','sup-notice','sup-hours','sup-archive','sup-qa','sup-complaint','sup-finance'], description:'审核、督查、教研、档案、课时统计' },
+    { id:'pl4', role:'admin', label:'行政主管', permissions:['admin-home','admin-account','admin-role','admin-permission-layout','admin-attendance','admin-hr','admin-teacher-detail','admin-child-info','admin-parent-info','admin-student-file','admin-new-student','admin-transfer','admin-complaint-handle','admin-parent-demand','admin-master-schedule','admin-material','admin-export','admin-export-summary','admin-announce','admin-config'], description:'人员管理、档案信息管理、诉求处理、素材与导出、全局设置' }
+  ]);
   DB.set('seeded', true);
 }
 
@@ -2270,6 +2369,684 @@ function exportData(table){
   a.click();
   URL.revokeObjectURL(url);
   toast('已导出 ' + table);
+}
+
+/* ===== New: Admin - Teacher Detail Info Management ===== */
+PAGE_RENDERERS['admin-teacher-detail'] = (c) => {
+  const list = DB.get('teacherDetails',[]);
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">教师信息管理</div><button class="btn btn-primary btn-sm" onclick="openTeacherDetailModal()">录入教师信息</button></div>
+      <div class="alert alert-info">行政主管可录入和查阅教师的详细个人信息,包含身份、学历、证书、合同等关键信息。</div>
+      ${renderTable(['姓名','电话','学历','专业','入职时间','状态','操作'], list.map(t=>({姓名:t.name,电话:t.phone,学历:t.education,专业:t.major,入职时间:t.joinDate,状态:badge('在职'),操作:`<button class="btn btn-sm btn-secondary" onclick="viewTeacherDetail('${t.id}')">查看详情</button> <button class="btn btn-sm btn-warning" onclick="editTeacherDetail('${t.id}')">编辑</button> <button class="btn btn-sm btn-danger" onclick="deleteTeacherDetail('${t.id}')">删除</button>`})))}
+    </div>
+  `;
+};
+function openTeacherDetailModal(id){
+  const t = id ? DB.get('teacherDetails',[]).find(x=>x.id===id) : {};
+  openModal(id?'编辑教师信息':'录入教师信息', `
+    <form id="teacherDetailForm">
+      ${formGroup('教师姓名', inputText('name', t.name||'','教师姓名'))}
+      <div class="form-row">
+        ${formGroup('出生日期', inputDate('birthDate', t.birthDate||''))}
+        ${formGroup('身份证号', inputText('idCard', t.idCard||'','身份证号'))}
+      </div>
+      <div class="form-row">
+        ${formGroup('电话', inputText('phone', t.phone||'','联系电话'))}
+        ${formGroup('学历', inputSelect('education',[{value:'大专',label:'大专'},{value:'本科',label:'本科'},{value:'硕士',label:'硕士'},{value:'博士',label:'博士'}], t.education||''))}
+      </div>
+      ${formGroup('专业', inputText('major', t.major||'','所学专业'))}
+      ${formGroup('取得证书(可填多个,预留充足空间)', inputTextarea('certificates', t.certificates||'','如:教师资格证,康复师资格证,ABA行为分析师证书...'))}
+      ${formGroup('户口地址', inputTextarea('hukouAddr', t.hukouAddr||'','户口所在地详细地址'))}
+      <div class="form-row">
+        ${formGroup('入职时间', inputDate('joinDate', t.joinDate||''))}
+        ${formGroup('转正时间', inputDate('regularDate', t.regularDate||''))}
+      </div>
+      <div class="form-row">
+        ${formGroup('签约时间', inputDate('signDate', t.signDate||''))}
+        ${formGroup('到期时间', inputDate('expireDate', t.expireDate||''))}
+      </div>
+      ${formGroup('备注', inputTextarea('remark', t.remark||'','其他说明'))}
+    </form>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitTeacherDetail('${id||''}')">保存</button>`);
+}
+function submitTeacherDetail(id){
+  const form = document.getElementById('teacherDetailForm');
+  const list = DB.get('teacherDetails',[]);
+  const data = {
+    name: form.name.value,
+    birthDate: form.birthDate.value,
+    idCard: form.idCard.value,
+    phone: form.phone.value,
+    education: form.education.value,
+    major: form.major.value,
+    certificates: form.certificates.value,
+    hukouAddr: form.hukouAddr.value,
+    joinDate: form.joinDate.value,
+    regularDate: form.regularDate.value,
+    signDate: form.signDate.value,
+    expireDate: form.expireDate.value,
+    remark: form.remark.value
+  };
+  if(id){
+    const idx = list.findIndex(x=>x.id===id);
+    if(idx>=0){ Object.assign(list[idx], data); }
+  } else {
+    data.id = DB.uid();
+    data.teacherId = 't_'+Date.now();
+    list.push(data);
+  }
+  DB.set('teacherDetails', list);
+  closeModal();
+  toast(id?'已更新':'已录入');
+  navigate('admin-teacher-detail');
+}
+function viewTeacherDetail(id){
+  const t = DB.get('teacherDetails',[]).find(x=>x.id===id);
+  if(!t) return;
+  openModal('教师详细信息 - '+t.name, `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="label">教师姓名</div><div class="value">${t.name||'-'}</div></div>
+      <div class="detail-item"><div class="label">出生日期</div><div class="value">${t.birthDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">身份证号</div><div class="value">${t.idCard||'-'}</div></div>
+      <div class="detail-item"><div class="label">联系电话</div><div class="value">${t.phone||'-'}</div></div>
+      <div class="detail-item"><div class="label">学历</div><div class="value">${t.education||'-'}</div></div>
+      <div class="detail-item"><div class="label">专业</div><div class="value">${t.major||'-'}</div></div>
+      <div class="detail-item full"><div class="label">取得证书</div><div class="value">${t.certificates||'-'}</div></div>
+      <div class="detail-item full"><div class="label">户口地址</div><div class="value">${t.hukouAddr||'-'}</div></div>
+      <div class="detail-item"><div class="label">入职时间</div><div class="value">${t.joinDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">转正时间</div><div class="value">${t.regularDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">签约时间</div><div class="value">${t.signDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">到期时间</div><div class="value">${t.expireDate||'-'}</div></div>
+      <div class="detail-item full"><div class="label">备注</div><div class="value">${t.remark||'-'}</div></div>
+    </div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="closeModal();editTeacherDetail('${id}')">编辑</button>`);
+}
+function editTeacherDetail(id){ openTeacherDetailModal(id); }
+function deleteTeacherDetail(id){
+  if(!confirm('确认删除该教师信息?')) return;
+  const list = DB.get('teacherDetails',[]).filter(x=>x.id!==id);
+  DB.set('teacherDetails', list);
+  toast('已删除');
+  navigate('admin-teacher-detail');
+}
+
+/* ===== New: Admin - Child Info Management ===== */
+PAGE_RENDERERS['admin-child-info'] = (c) => {
+  const list = DB.get('childDetails',[]);
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">儿童信息管理</div><button class="btn btn-primary btn-sm" onclick="openChildInfoModal()">录入儿童信息</button></div>
+      <div class="alert alert-info">行政主管负责录入和查阅儿童详细信息,含基本信息、监护人、诊断、咨询与指导等。</div>
+      ${renderTable(['孩子姓名','性别','出生日期','监护人','联系方式','诊断结果','咨询日期','操作'], list.map(d=>({孩子姓名:d.childName,性别:d.gender,出生日期:d.birthDate,监护人:d.guardian1+' / '+d.guardian2,联系方式:d.phone1+' / '+d.phone2,诊断结果:d.diagnosis,咨询日期:d.consultDate,操作:`<button class="btn btn-sm btn-secondary" onclick="viewChildInfo('${d.id}')">查看</button> <button class="btn btn-sm btn-warning" onclick="editChildInfo('${d.id}')">编辑</button> <button class="btn btn-sm btn-danger" onclick="deleteChildInfo('${d.id}')">删除</button>`})))}
+    </div>
+  `;
+};
+function openChildInfoModal(id){
+  const d = id ? DB.get('childDetails',[]).find(x=>x.id===id) : {};
+  const cc = d.consultContent || [];
+  const gd = d.guidance || [];
+  openModal(id?'编辑儿童信息':'录入儿童信息', `
+    <form id="childInfoForm">
+      <div class="form-row">
+        ${formGroup('孩子姓名', inputText('childName', d.childName||'','孩子姓名'))}
+        ${formGroup('性别', inputSelect('gender',[{value:'男',label:'男'},{value:'女',label:'女'}], d.gender||''))}
+      </div>
+      <div class="form-row">
+        ${formGroup('出生日期', inputDate('birthDate', d.birthDate||''))}
+        ${formGroup('籍贯', inputText('origin', d.origin||'','如:广东汕头'))}
+      </div>
+      <div class="form-row">
+        ${formGroup('监护人姓名(一)', inputText('guardian1', d.guardian1||'','第一监护人'))}
+        ${formGroup('联系方式(一)', inputText('phone1', d.phone1||'','第一联系人电话'))}
+      </div>
+      <div class="form-row">
+        ${formGroup('监护人姓名(二)', inputText('guardian2', d.guardian2||'','第二监护人'))}
+        ${formGroup('联系方式(二)', inputText('phone2', d.phone2||'','第二联系人电话'))}
+      </div>
+      ${formGroup('家庭地址', inputTextarea('homeAddr', d.homeAddr||'','家庭详细地址'))}
+      ${formGroup('诊断结果', inputText('diagnosis', d.diagnosis||'','如:孤独症谱系障碍'))}
+      <div class="form-row">
+        ${formGroup('咨询日期', inputDate('consultDate', d.consultDate||''))}
+        ${formGroup('入读时间', inputDate('enrollDate', d.enrollDate||''))}
+      </div>
+      ${formGroup('结业时间', inputDate('finishDate', d.finishDate||''))}
+      <div class="form-group">
+        <label>咨询内容(可多选)</label>
+        <div class="check-group" id="consultContentGroup">
+          ${['课内','课外','培训'].map(opt=>`<label class="check-item ${cc.includes(opt)?'checked':''}"><input type="checkbox" name="consultContent" value="${opt}" ${cc.includes(opt)?'checked':''}> ${opt}</label>`).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>指导意见(可多选)</label>
+        <div class="check-group" id="guidanceGroup">
+          ${['入训','转介'].map(opt=>`<label class="check-item ${gd.includes(opt)?'checked':''}"><input type="checkbox" name="guidance" value="${opt}" ${gd.includes(opt)?'checked':''}> ${opt}</label>`).join('')}
+        </div>
+      </div>
+      ${formGroup('备注', inputTextarea('remark', d.remark||'','其他说明'))}
+    </form>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitChildInfo('${id||''}')">保存</button>`);
+  // toggle checked class
+  document.querySelectorAll('#consultContentGroup .check-item input, #guidanceGroup .check-item input').forEach(cb=>{
+    cb.addEventListener('change', function(){ this.parentElement.classList.toggle('checked', this.checked); });
+  });
+}
+function submitChildInfo(id){
+  const form = document.getElementById('childInfoForm');
+  const list = DB.get('childDetails',[]);
+  const consultContent = Array.from(form.querySelectorAll('input[name="consultContent"]:checked')).map(x=>x.value);
+  const guidance = Array.from(form.querySelectorAll('input[name="guidance"]:checked')).map(x=>x.value);
+  const data = {
+    childName: form.childName.value,
+    gender: form.gender.value,
+    birthDate: form.birthDate.value,
+    origin: form.origin.value,
+    guardian1: form.guardian1.value,
+    guardian2: form.guardian2.value,
+    phone1: form.phone1.value,
+    phone2: form.phone2.value,
+    homeAddr: form.homeAddr.value,
+    diagnosis: form.diagnosis.value,
+    consultDate: form.consultDate.value,
+    enrollDate: form.enrollDate.value,
+    finishDate: form.finishDate.value,
+    consultContent,
+    guidance,
+    remark: form.remark.value
+  };
+  if(id){
+    const idx = list.findIndex(x=>x.id===id);
+    if(idx>=0){ Object.assign(list[idx], data); }
+  } else {
+    data.id = DB.uid();
+    list.push(data);
+  }
+  DB.set('childDetails', list);
+  closeModal();
+  toast(id?'已更新':'已录入');
+  navigate('admin-child-info');
+}
+function viewChildInfo(id){
+  const d = DB.get('childDetails',[]).find(x=>x.id===id);
+  if(!d) return;
+  const cc = (d.consultContent||[]).join('、') || '-';
+  const gd = (d.guidance||[]).join('、') || '-';
+  openModal('儿童详细信息 - '+d.childName, `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="label">孩子姓名</div><div class="value">${d.childName||'-'}</div></div>
+      <div class="detail-item"><div class="label">性别</div><div class="value">${d.gender||'-'}</div></div>
+      <div class="detail-item"><div class="label">出生日期</div><div class="value">${d.birthDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">籍贯</div><div class="value">${d.origin||'-'}</div></div>
+      <div class="detail-item"><div class="label">监护人(一)</div><div class="value">${d.guardian1||'-'} / ${d.phone1||'-'}</div></div>
+      <div class="detail-item"><div class="label">监护人(二)</div><div class="value">${d.guardian2||'-'} / ${d.phone2||'-'}</div></div>
+      <div class="detail-item full"><div class="label">家庭地址</div><div class="value">${d.homeAddr||'-'}</div></div>
+      <div class="detail-item"><div class="label">诊断结果</div><div class="value">${d.diagnosis||'-'}</div></div>
+      <div class="detail-item"><div class="label">咨询日期</div><div class="value">${d.consultDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">入读时间</div><div class="value">${d.enrollDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">结业时间</div><div class="value">${d.finishDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">咨询内容</div><div class="value">${cc}</div></div>
+      <div class="detail-item"><div class="label">指导意见</div><div class="value">${gd}</div></div>
+      <div class="detail-item full"><div class="label">备注</div><div class="value">${d.remark||'-'}</div></div>
+    </div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="closeModal();editChildInfo('${id}')">编辑</button>`);
+}
+function editChildInfo(id){ openChildInfoModal(id); }
+function deleteChildInfo(id){
+  if(!confirm('确认删除该儿童信息?')) return;
+  const list = DB.get('childDetails',[]).filter(x=>x.id!==id);
+  DB.set('childDetails', list);
+  toast('已删除');
+  navigate('admin-child-info');
+}
+
+/* ===== New: Admin - Parent Info Management ===== */
+PAGE_RENDERERS['admin-parent-info'] = (c) => {
+  const list = DB.get('parentInfos',[]);
+  const children = DB.get('childDetails',[]);
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">家长信息管理</div><button class="btn btn-primary btn-sm" onclick="openParentInfoModal()">录入家长信息</button></div>
+      <div class="alert alert-info">家长信息含:手机号 + 姓名 + 小孩,用于家长角色登录与孩子关联。</div>
+      ${renderTable(['手机号','姓名','关系','小孩','备注','操作'], list.map(p=>({手机号:p.phone,姓名:p.name,关系:p.relation||'-',小孩:p.child,备注:p.remark||'-',操作:`<button class="btn btn-sm btn-warning" onclick="editParentInfo('${p.id}')">编辑</button> <button class="btn btn-sm btn-danger" onclick="deleteParentInfo('${p.id}')">删除</button>`})))}
+    </div>
+  `;
+};
+function openParentInfoModal(id){
+  const p = id ? DB.get('parentInfos',[]).find(x=>x.id===id) : {};
+  const children = DB.get('childDetails',[]);
+  const childOpts = children.map(c=>({value:c.childName,label:c.childName}));
+  if(childOpts.length===0) childOpts.push({value:'',label:'(请先录入儿童信息)'});
+  openModal(id?'编辑家长信息':'录入家长信息', `
+    <form id="parentInfoForm">
+      ${formGroup('手机号', inputText('phone', p.phone||'','家长手机号(登录账号)'))}
+      ${formGroup('姓名', inputText('name', p.name||'','家长姓名'))}
+      <div class="form-row">
+        ${formGroup('关系', inputSelect('relation',[{value:'父亲',label:'父亲'},{value:'母亲',label:'母亲'},{value:'爷爷',label:'爷爷'},{value:'奶奶',label:'奶奶'},{value:'外公',label:'外公'},{value:'外婆',label:'外婆'},{value:'其他',label:'其他'}], p.relation||''))}
+        ${formGroup('小孩', inputSelect('child', childOpts, p.child||''))}
+      </div>
+      ${formGroup('备注', inputTextarea('remark', p.remark||'','其他说明'))}
+    </form>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitParentInfo('${id||''}')">保存</button>`);
+}
+function submitParentInfo(id){
+  const form = document.getElementById('parentInfoForm');
+  const list = DB.get('parentInfos',[]);
+  const data = {
+    phone: form.phone.value,
+    name: form.name.value,
+    relation: form.relation.value,
+    child: form.child.value,
+    remark: form.remark.value
+  };
+  if(id){
+    const idx = list.findIndex(x=>x.id===id);
+    if(idx>=0){ Object.assign(list[idx], data); }
+  } else {
+    data.id = DB.uid();
+    list.push(data);
+  }
+  DB.set('parentInfos', list);
+  closeModal();
+  toast(id?'已更新':'已录入');
+  navigate('admin-parent-info');
+}
+function editParentInfo(id){ openParentInfoModal(id); }
+function deleteParentInfo(id){
+  if(!confirm('确认删除该家长信息?')) return;
+  const list = DB.get('parentInfos',[]).filter(x=>x.id!==id);
+  DB.set('parentInfos', list);
+  toast('已删除');
+  navigate('admin-parent-info');
+}
+
+/* ===== New: Admin - Complaint/Request Handling ===== */
+PAGE_RENDERERS['admin-complaint-handle'] = (c) => {
+  const complaints = DB.get('complaints',[]);
+  const parentDemands = DB.get('parentDemands',[]);
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">投诉与诉求处理</div><button class="btn btn-primary btn-sm" onclick="openComplaintHandleModal()">登记新诉求</button></div>
+      <div class="alert alert-info">行政主管负责统一受理和处理家长投诉、课程诉求等,处理结果将同步到对应家长端。</div>
+      ${renderTable(['日期','类型','来源','内容','状态','操作'], complaints.map(cp=>({日期:cp.date,类型:cp.type,来源:cp.parent,内容:cp.content,状态:badge(cp.status),操作:`<button class="btn btn-sm btn-primary" onclick="handleComplaint('${cp.id}')">处理</button> <button class="btn btn-sm btn-secondary" onclick="viewComplaint('${cp.id}')">查看</button>`})))}
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">家长课程诉求</div></div>
+      ${renderTable(['日期','家长','学员','诉求','状态','操作'], parentDemands.map(d=>({日期:d.date,家长:d.parent,学员:d.student,诉求:d.demand,状态:badge(d.status),操作:`<button class="btn btn-sm btn-primary" onclick="handleParentDemand('${d.id}')">处理</button>`})))}
+    </div>
+  `;
+};
+function openComplaintHandleModal(){
+  openModal('登记新诉求', `
+    <form id="complaintHandleForm">
+      <div class="form-row">
+        ${formGroup('来源家长', inputText('parent','','如:小明家长'))}
+        ${formGroup('类型', inputSelect('type',[{value:'课程诉求',label:'课程诉求'},{value:'教学投诉',label:'教学投诉'},{value:'服务投诉',label:'服务投诉'},{value:'其他',label:'其他'}]))}
+      </div>
+      ${formGroup('诉求内容', inputTextarea('content','','详细描述诉求内容'))}
+    </form>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitNewComplaint()">登记</button>`);
+}
+function submitNewComplaint(){
+  const form = document.getElementById('complaintHandleForm');
+  const list = DB.get('complaints',[]);
+  list.push({
+    id: DB.uid(),
+    parent: form.parent.value,
+    type: form.type.value,
+    content: form.content.value,
+    status: '处理中',
+    reply: '',
+    date: todayStr()
+  });
+  DB.set('complaints', list);
+  closeModal();
+  toast('已登记');
+  navigate('admin-complaint-handle');
+}
+function handleComplaint(id){
+  const cp = DB.get('complaints',[]).find(x=>x.id===id);
+  if(!cp) return;
+  openModal('处理诉求 - '+cp.type, `
+    <div class="detail-grid" style="margin-bottom:14px">
+      <div class="detail-item"><div class="label">来源</div><div class="value">${cp.parent}</div></div>
+      <div class="detail-item"><div class="label">日期</div><div class="value">${cp.date}</div></div>
+      <div class="detail-item full"><div class="label">诉求内容</div><div class="value">${cp.content}</div></div>
+    </div>
+    <form id="handleComplaintForm">
+      ${formGroup('处理结果', inputTextarea('reply', cp.reply||'','请输入处理结果'))}
+      ${formGroup('状态', inputSelect('status',[{value:'处理中',label:'处理中'},{value:'已处理',label:'已处理'}], cp.status))}
+    </form>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitHandleComplaint('${id}')">提交</button>`);
+}
+function submitHandleComplaint(id){
+  const form = document.getElementById('handleComplaintForm');
+  const list = DB.get('complaints',[]);
+  const cp = list.find(x=>x.id===id);
+  if(cp){
+    cp.reply = form.reply.value;
+    cp.status = form.status.value;
+    DB.set('complaints', list);
+  }
+  closeModal();
+  toast('已提交处理');
+  navigate('admin-complaint-handle');
+}
+function viewComplaint(id){
+  const cp = DB.get('complaints',[]).find(x=>x.id===id);
+  if(!cp) return;
+  openModal('诉求详情 - '+cp.type, `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="label">来源</div><div class="value">${cp.parent}</div></div>
+      <div class="detail-item"><div class="label">日期</div><div class="value">${cp.date}</div></div>
+      <div class="detail-item full"><div class="label">诉求内容</div><div class="value">${cp.content}</div></div>
+      <div class="detail-item full"><div class="label">处理结果</div><div class="value">${cp.reply||'尚未处理'}</div></div>
+      <div class="detail-item"><div class="label">状态</div><div class="value">${badge(cp.status)}</div></div>
+    </div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">关闭</button>`);
+}
+function handleParentDemand(id){
+  const list = DB.get('parentDemands',[]);
+  const d = list.find(x=>x.id===id);
+  if(!d) return;
+  openModal('处理家长课程诉求', `
+    <div class="detail-grid" style="margin-bottom:14px">
+      <div class="detail-item"><div class="label">家长</div><div class="value">${d.parent}</div></div>
+      <div class="detail-item"><div class="label">学员</div><div class="value">${d.student}</div></div>
+      <div class="detail-item full"><div class="label">诉求</div><div class="value">${d.demand}</div></div>
+    </div>
+    <form id="handleDemandForm">
+      ${formGroup('处理意见', inputTextarea('reply','','处理意见与反馈'))}
+      ${formGroup('状态', inputSelect('status',[{value:'已记录',label:'已记录'},{value:'处理中',label:'处理中'},{value:'已处理',label:'已处理'}], d.status))}
+    </form>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitHandleDemand('${id}')">提交</button>`);
+}
+function submitHandleDemand(id){
+  const form = document.getElementById('handleDemandForm');
+  const list = DB.get('parentDemands',[]);
+  const d = list.find(x=>x.id===id);
+  if(d){
+    d.status = form.status.value;
+    d.reply = form.reply.value;
+    DB.set('parentDemands', list);
+  }
+  closeModal();
+  toast('已提交');
+  navigate('admin-complaint-handle');
+}
+
+/* ===== New: Admin - Permission Layout ===== */
+PAGE_RENDERERS['admin-permission-layout'] = (c) => {
+  const layout = DB.get('permissionLayout',[]);
+  const allPages = NAV_MENUS;
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">权限布局</div><button class="btn btn-primary btn-sm" onclick="openPermissionEditModal()">编辑权限布局</button></div>
+      <div class="alert alert-info">行政主管可统一配置各角色的可见功能菜单,实现权限的可视化布局。</div>
+      <table class="perm-matrix">
+        <thead>
+          <tr><th>角色</th><th>描述</th><th>可见功能菜单</th><th>功能数量</th></tr>
+        </thead>
+        <tbody>
+          ${layout.map(p=>`<tr>
+            <td class="perm-role">${p.label}</td>
+            <td>${p.description||'-'}</td>
+            <td>${(p.permissions||[]).map(k=>`<span class="perm-tag">${k}</span>`).join('')}</td>
+            <td>${(p.permissions||[]).length}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">各角色功能菜单明细</div></div>
+      ${Object.keys(allPages).map(role=>{
+        const info = ROLE_INFO[role];
+        const sections = allPages[role];
+        const total = sections.flatMap(s=>s.items).length;
+        return `<div style="margin-bottom:16px"><h4 style="font-size:14px;font-weight:600;margin-bottom:8px">${info.name} (共${total}项)</h4><div>${sections.flatMap(s=>s.items.map(i=>`<span class="perm-tag">${i.icon} ${i.label} <code style="font-size:10px;color:#64748B">${i.key}</code></span>`)).join('')}</div></div>`;
+      }).join('')}
+    </div>
+  `;
+};
+function openPermissionEditModal(){
+  const layout = DB.get('permissionLayout',[]);
+  const allPages = NAV_MENUS;
+  const bodyHtml = Object.keys(allPages).map(role=>{
+    const info = ROLE_INFO[role];
+    const p = layout.find(x=>x.role===role) || {permissions:[]};
+    const perms = p.permissions || [];
+    const items = allPages[role].flatMap(s=>s.items);
+    return `<div class="form-group">
+      <label>${info.name} - 功能权限</label>
+      <div class="check-group">
+        ${items.map(i=>`<label class="check-item ${perms.includes(i.key)?'checked':''}"><input type="checkbox" name="perm_${role}" value="${i.key}" ${perms.includes(i.key)?'checked':''}> ${i.icon} ${i.label}</label>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  openModal('编辑权限布局', bodyHtml + `
+    <div class="form-group">
+      <label>行政主管 - 角色描述</label>
+      <textarea name="adminDesc" class="form-control" rows="2">${(layout.find(x=>x.role==='admin')||{}).description||''}</textarea>
+    </div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitPermissionLayout()">保存</button>`);
+  document.querySelectorAll('.check-item input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', function(){ this.parentElement.classList.toggle('checked', this.checked); });
+  });
+}
+function submitPermissionLayout(){
+  const layout = DB.get('permissionLayout',[]);
+  Object.keys(NAV_MENUS).forEach(role=>{
+    const checked = Array.from(document.querySelectorAll('input[name="perm_'+role+'"]:checked')).map(x=>x.value);
+    const p = layout.find(x=>x.role===role);
+    if(p){ p.permissions = checked; }
+    else { layout.push({ id:DB.uid(), role, label:ROLE_INFO[role].name, permissions:checked, description:'' }); }
+  });
+  const adminDesc = document.querySelector('textarea[name="adminDesc"]');
+  if(adminDesc){ const a = layout.find(x=>x.role==='admin'); if(a) a.description = adminDesc.value; }
+  DB.set('permissionLayout', layout);
+  closeModal();
+  toast('权限布局已保存');
+  navigate('admin-permission-layout');
+}
+
+/* ===== New: Admin - Material Management (Word/Excel) ===== */
+PAGE_RENDERERS['admin-material'] = (c) => {
+  const list = DB.get('materials',[]);
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">素材格式管理(Word/Excel)</div><button class="btn btn-primary btn-sm" onclick="openMaterialModal()">上传素材</button></div>
+      <div class="alert alert-info">支持 Word(.docx/.doc) 和 Excel(.xlsx/.xls) 格式的素材模板上传与管理。</div>
+      <div class="stat-grid">
+        ${statCard('素材总数', list.length)}
+        ${statCard('Word文档', list.filter(m=>m.type==='word').length)}
+        ${statCard('Excel表格', list.filter(m=>m.type==='excel').length)}
+      </div>
+      <div class="card-header" style="margin-top:12px"><div class="card-title" style="font-size:14px">素材列表</div></div>
+      ${list.length ? list.map(m=>`<div class="file-list-item">
+        <div class="file-icon ${m.type}">${m.type==='word'?'W':m.type==='excel'?'X':'F'}</div>
+        <div class="file-info">
+          <div class="file-name">${m.name}</div>
+          <div class="file-meta">${m.type==='word'?'Word文档':'Excel表格'} | ${m.size} | ${m.category} | 上传:${m.uploader} | ${m.uploadDate}${m.remark?' | '+m.remark:''}</div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="downloadMaterial('${m.id}')">下载</button>
+        <button class="btn btn-sm btn-warning" onclick="editMaterial('${m.id}')">编辑</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMaterial('${m.id}')">删除</button>
+      </div>`).join('') : emptyState('暂无素材')}
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">上传说明</div></div>
+      <div class="alert alert-info">
+        <strong>支持的格式:</strong><br>
+        • Word文档: .docx / .doc<br>
+        • Excel表格: .xlsx / .xls<br>
+        • 文件大小限制: 单文件 ≤ 20MB<br>
+        • 常见用途: 训练计划模板、评估表、课时统计、信息汇总等
+      </div>
+    </div>
+  `;
+};
+function openMaterialModal(id){
+  const m = id ? DB.get('materials',[]).find(x=>x.id===id) : {};
+  openModal(id?'编辑素材':'上传素材', `
+    <form id="materialForm">
+      ${formGroup('素材名称', inputText('name', m.name||'','如:7月训练计划模板.docx'))}
+      <div class="form-row">
+        ${formGroup('格式类型', inputSelect('type',[{value:'word',label:'Word文档'},{value:'excel',label:'Excel表格'}], m.type||''))}
+        ${formGroup('文件大小', inputText('size', m.size||'','如:32KB'))}
+      </div>
+      <div class="form-row">
+        ${formGroup('分类', inputSelect('category',[{value:'训练计划',label:'训练计划'},{value:'评估表',label:'评估表'},{value:'课时统计',label:'课时统计'},{value:'档案管理',label:'档案管理'},{value:'调查问卷',label:'调查问卷'},{value:'其他',label:'其他'}], m.category||''))}
+        ${formGroup('上传人', inputText('uploader', m.uploader||'王主任','上传者'))}
+      </div>
+      ${formGroup('备注', inputTextarea('remark', m.remark||'','素材用途说明'))}
+      <div class="form-group">
+        <label>选择文件(Word/Excel)</label>
+        <input type="file" name="file" accept=".doc,.docx,.xls,.xlsx" style="padding:8px;border:1px solid var(--color-border);border-radius:var(--radius-sm);width:100%">
+        <small style="color:var(--color-text-muted);font-size:12px">支持 .doc/.docx/.xls/.xlsx 格式</small>
+      </div>
+    </form>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitMaterial('${id||''}')">保存</button>`);
+}
+function submitMaterial(id){
+  const form = document.getElementById('materialForm');
+  const list = DB.get('materials',[]);
+  const data = {
+    name: form.name.value,
+    type: form.type.value,
+    size: form.size.value || '未知',
+    category: form.category.value,
+    uploader: form.uploader.value,
+    remark: form.remark.value,
+    uploadDate: id ? (list.find(x=>x.id===id)||{}).uploadDate : todayStr()
+  };
+  if(id){
+    const idx = list.findIndex(x=>x.id===id);
+    if(idx>=0){ Object.assign(list[idx], data); }
+  } else {
+    data.id = DB.uid();
+    list.push(data);
+  }
+  DB.set('materials', list);
+  closeModal();
+  toast(id?'已更新':'已上传');
+  navigate('admin-material');
+}
+function editMaterial(id){ openMaterialModal(id); }
+function deleteMaterial(id){
+  if(!confirm('确认删除该素材?')) return;
+  const list = DB.get('materials',[]).filter(x=>x.id!==id);
+  DB.set('materials', list);
+  toast('已删除');
+  navigate('admin-material');
+}
+function downloadMaterial(id){
+  toast('素材下载已触发(演示)');
+}
+
+/* ===== New: Admin - Export Summary Table (早期干预咨询汇总表) ===== */
+PAGE_RENDERERS['admin-export-summary'] = (c) => {
+  const list = DB.get('childDetails',[]);
+  const config = DB.get('miniProgramConfig',{});
+  c.innerHTML = `
+    <div class="card no-print">
+      <div class="card-header"><div class="card-title">咨询汇总表导出</div><div>
+        <button class="btn btn-primary btn-sm" onclick="printSummaryTable()">🖨️ 打印</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportSummaryCSV()">📥 导出CSV</button>
+      </div></div>
+      <div class="alert alert-info">可导出打印儿童早期干预咨询汇总表,供上级主管单位检查。格式参照"2025年汕头市慧翔智能康复中心早期干预咨询汇总表"。</div>
+      <div class="stat-grid">
+        ${statCard('儿童总数', list.length)}
+        ${statCard('在读', list.filter(d=>!d.finishDate).length)}
+        ${statCard('已结业', list.filter(d=>d.finishDate).length)}
+      </div>
+    </div>
+    <div class="card no-print">
+      <div class="card-header"><div class="card-title">预览(打印效果)</div></div>
+      <div class="print-title">早期干预咨询汇总表</div>
+      <div class="print-subtitle">${config.name||'慧智星儿童发展中心'} | ${todayStr()}</div>
+      <table class="export-summary-table">
+        <thead>
+          <tr>
+            <th>编号</th>
+            <th>孩子姓名</th>
+            <th>性别</th>
+            <th>出生日期</th>
+            <th>籍贯</th>
+            <th>监护人</th>
+            <th>联系方式</th>
+            <th>家庭地址</th>
+            <th>诊断结果</th>
+            <th>咨询日期</th>
+            <th>咨询内容</th>
+            <th>指导建议</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.length ? list.map((d,i)=>`<tr>
+            <td>${i+1}</td>
+            <td>${d.childName||''}</td>
+            <td>${d.gender||''}</td>
+            <td>${d.birthDate||''}</td>
+            <td>${d.origin||''}</td>
+            <td>${d.guardian1||''}<br>${d.guardian2||''}</td>
+            <td>${d.phone1||''}<br>${d.phone2||''}</td>
+            <td>${d.homeAddr||''}</td>
+            <td>${d.diagnosis||''}</td>
+            <td>${d.consultDate||''}</td>
+            <td>${(d.consultContent||[]).join('、')}</td>
+            <td>${(d.guidance||[]).join('、')}</td>
+          </tr>`).join('') : `<tr><td colspan="12">${emptyState('暂无数据')}</td></tr>`}
+        </tbody>
+      </table>
+      <div style="margin-top:12px;font-size:12px;color:var(--color-text-muted);display:flex;justify-content:space-between">
+        <span>制表人:____________</span>
+        <span>审核人:____________</span>
+        <span>日期:____________</span>
+      </div>
+    </div>
+    <div class="print-area">
+      <div class="print-title">早期干预咨询汇总表</div>
+      <div class="print-subtitle">${config.name||'慧智星儿童发展中心'} | ${todayStr()}</div>
+      <table>
+        <thead>
+          <tr>
+            <th>编号</th><th>孩子姓名</th><th>性别</th><th>出生日期</th><th>籍贯</th>
+            <th>监护人</th><th>联系方式</th><th>家庭地址</th><th>诊断结果</th>
+            <th>咨询日期</th><th>咨询内容</th><th>指导建议</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map((d,i)=>`<tr>
+            <td>${i+1}</td><td>${d.childName||''}</td><td>${d.gender||''}</td>
+            <td>${d.birthDate||''}</td><td>${d.origin||''}</td>
+            <td>${d.guardian1||''} ${d.guardian2||''}</td><td>${d.phone1||''} ${d.phone2||''}</td>
+            <td>${d.homeAddr||''}</td><td>${d.diagnosis||''}</td>
+            <td>${d.consultDate||''}</td><td>${(d.consultContent||[]).join('、')}</td>
+            <td>${(d.guidance||[]).join('、')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="print-footer">
+        <span>制表人:____________</span>
+        <span>审核人:____________</span>
+        <span>日期:____________</span>
+      </div>
+    </div>
+  `;
+};
+function printSummaryTable(){ window.print(); }
+function exportSummaryCSV(){
+  const list = DB.get('childDetails',[]);
+  const headers = ['编号','孩子姓名','性别','出生日期','籍贯','监护人1','监护人2','联系方式1','联系方式2','家庭地址','诊断结果','咨询日期','入读时间','结业时间','咨询内容','指导建议'];
+  const rows = list.map((d,i)=>[i+1,d.childName,d.gender,d.birthDate,d.origin,d.guardian1,d.guardian2,d.phone1,d.phone2,d.homeAddr,d.diagnosis,d.consultDate,d.enrollDate,d.finishDate,(d.consultContent||[]).join('、'),(d.guidance||[]).join('、')]);
+  const csv = '﻿' + [headers, ...rows].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '咨询汇总表_'+todayStr()+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV已导出');
 }
 
 /* ========== Init ========== */
