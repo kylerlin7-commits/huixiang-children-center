@@ -188,23 +188,32 @@ tr:hover{background:var(--color-muted)}
 /* ===== New: Printable export ===== */
 .print-area{display:none}
 @media print{
-  .sidebar,.topbar,.modal-overlay,.no-print{display:none!important}
-  .main{margin-left:0!important}
+  @page{size:A4 landscape;margin:10mm}
+  .sidebar,.topbar,.modal-overlay,.no-print,.toast,.fab{display:none!important}
+  .main{margin-left:0!important;padding:0!important}
+  .content{padding:0!important}
   .print-area{display:block}
-  .print-area .print-title{text-align:center;font-size:20px;font-weight:700;margin:16px 0 8px}
-  .print-area .print-subtitle{text-align:center;font-size:13px;color:#333;margin-bottom:12px}
-  .print-area table{width:100%;border-collapse:collapse;font-size:11px}
-  .print-area th,.print-area td{border:1px solid #333;padding:4px 6px;text-align:left;word-break:break-all}
-  .print-area th{background:#eee;font-weight:600}
-  .print-area .print-footer{margin-top:12px;font-size:12px;color:#333;display:flex;justify-content:space-between}
+  .print-area .print-title{text-align:center;font-size:18px;font-weight:700;margin:8px 4px}
+  .print-area .print-subtitle{text-align:center;font-size:12px;color:#333;margin-bottom:10px}
+  .print-area table{width:100%;border-collapse:collapse;font-size:10pt;table-layout:fixed}
+  .print-area th,.print-area td{border:1px solid #333;padding:3px 5px;text-align:left;word-break:break-all;vertical-align:top}
+  .print-area th{background:#eee;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .print-area .print-footer{margin-top:10px;font-size:11px;color:#333;display:flex;justify-content:space-between}
   body{background:#fff}
-  .content{padding:0}
+  .app-shell{display:block!important}
 }
 .print-title{font-size:20px;font-weight:700;text-align:center;margin:8px 0 4px}
 .print-subtitle{font-size:13px;color:var(--color-text-muted);text-align:center;margin-bottom:12px}
 .export-summary-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
 .export-summary-table th,.export-summary-table td{border:1px solid #333;padding:6px 8px;text-align:left;word-break:break-all}
 .export-summary-table th{background:var(--color-muted);font-weight:600}
+/* ===== New: Certificate dynamic input ===== */
+.cert-list{display:flex;flex-direction:column;gap:8px}
+.cert-row{display:flex;gap:8px;align-items:center}
+.cert-row .cert-input{flex:1}
+.cert-row .cert-del-btn{flex-shrink:0;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1}
+.cert-view-list{margin:0;padding-left:18px}
+.cert-view-list li{margin:2px 0}
 /* ===== New: Material file icon ===== */
 .file-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
 .file-icon.word{background:#2B579A}
@@ -2396,7 +2405,17 @@ function openTeacherDetailModal(id){
         ${formGroup('学历', inputSelect('education',[{value:'大专',label:'大专'},{value:'本科',label:'本科'},{value:'硕士',label:'硕士'},{value:'博士',label:'博士'}], t.education||''))}
       </div>
       ${formGroup('专业', inputText('major', t.major||'','所学专业'))}
-      ${formGroup('取得证书(可填多个,预留充足空间)', inputTextarea('certificates', t.certificates||'','如:教师资格证,康复师资格证,ABA行为分析师证书...'))}
+      <div class="form-group">
+        <label class="form-label">取得证书 <button type="button" class="btn btn-sm btn-secondary" onclick="addCertRow()">+ 添加证书</button></label>
+        <div id="certList" class="cert-list">
+          ${(Array.isArray(t.certList)?t.certList:(t.certificates?t.certificates.split(',').map(s=>s.trim()).filter(Boolean):[''])).map((c,i)=>`
+            <div class="cert-row">
+              <input type="text" class="form-input cert-input" name="cert_${i}" value="${c||''}" placeholder="如:教师资格证"/>
+              <button type="button" class="btn btn-sm btn-danger cert-del-btn" onclick="removeCertRow(this)">×</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
       ${formGroup('户口地址', inputTextarea('hukouAddr', t.hukouAddr||'','户口所在地详细地址'))}
       <div class="form-row">
         ${formGroup('入职时间', inputDate('joinDate', t.joinDate||''))}
@@ -2413,6 +2432,8 @@ function openTeacherDetailModal(id){
 function submitTeacherDetail(id){
   const form = document.getElementById('teacherDetailForm');
   const list = DB.get('teacherDetails',[]);
+  const certInputs = document.querySelectorAll('#certList .cert-input');
+  const certList = Array.from(certInputs).map(i=>i.value.trim()).filter(Boolean);
   const data = {
     name: form.name.value,
     birthDate: form.birthDate.value,
@@ -2420,7 +2441,8 @@ function submitTeacherDetail(id){
     phone: form.phone.value,
     education: form.education.value,
     major: form.major.value,
-    certificates: form.certificates.value,
+    certList: certList,
+    certificates: certList.join(', '),
     hukouAddr: form.hukouAddr.value,
     joinDate: form.joinDate.value,
     regularDate: form.regularDate.value,
@@ -2441,6 +2463,21 @@ function submitTeacherDetail(id){
   toast(id?'已更新':'已录入');
   navigate('admin-teacher-detail');
 }
+function addCertRow(){
+  const list = document.getElementById('certList');
+  if(!list) return;
+  const i = list.children.length;
+  const row = document.createElement('div');
+  row.className = 'cert-row';
+  row.innerHTML = `<input type="text" class="form-input cert-input" name="cert_${i}" value="" placeholder="如:教师资格证"/><button type="button" class="btn btn-sm btn-danger cert-del-btn" onclick="removeCertRow(this)">×</button>`;
+  list.appendChild(row);
+}
+function removeCertRow(btn){
+  const list = document.getElementById('certList');
+  if(!list) return;
+  if(list.children.length<=1){ btn.previousElementSibling.value=''; return; }
+  btn.parentElement.remove();
+}
 function viewTeacherDetail(id){
   const t = DB.get('teacherDetails',[]).find(x=>x.id===id);
   if(!t) return;
@@ -2452,7 +2489,7 @@ function viewTeacherDetail(id){
       <div class="detail-item"><div class="label">联系电话</div><div class="value">${t.phone||'-'}</div></div>
       <div class="detail-item"><div class="label">学历</div><div class="value">${t.education||'-'}</div></div>
       <div class="detail-item"><div class="label">专业</div><div class="value">${t.major||'-'}</div></div>
-      <div class="detail-item full"><div class="label">取得证书</div><div class="value">${t.certificates||'-'}</div></div>
+      <div class="detail-item full"><div class="label">取得证书</div><div class="value">${(t.certList&&t.certList.length)?('<ul class="cert-view-list">'+t.certList.map(c=>`<li>${c}</li>`).join('')+'</ul>'):(t.certificates||'-')}</div></div>
       <div class="detail-item full"><div class="label">户口地址</div><div class="value">${t.hukouAddr||'-'}</div></div>
       <div class="detail-item"><div class="label">入职时间</div><div class="value">${t.joinDate||'-'}</div></div>
       <div class="detail-item"><div class="label">转正时间</div><div class="value">${t.regularDate||'-'}</div></div>
@@ -2569,8 +2606,8 @@ function submitChildInfo(id){
 function viewChildInfo(id){
   const d = DB.get('childDetails',[]).find(x=>x.id===id);
   if(!d) return;
-  const cc = (d.consultContent||[]).join('、') || '-';
-  const gd = (d.guidance||[]).join('、') || '-';
+  const cc = (d.consultContent||[]).join(' / ') || '-';
+  const gd = (d.guidance||[]).join(' / ') || '-';
   openModal('儿童详细信息 - '+d.childName, `
     <div class="detail-grid">
       <div class="detail-item"><div class="label">孩子姓名</div><div class="value">${d.childName||'-'}</div></div>
@@ -2667,7 +2704,7 @@ PAGE_RENDERERS['admin-complaint-handle'] = (c) => {
     <div class="card">
       <div class="card-header"><div class="card-title">投诉与诉求处理</div><button class="btn btn-primary btn-sm" onclick="openComplaintHandleModal()">登记新诉求</button></div>
       <div class="alert alert-info">行政主管负责统一受理和处理家长投诉、课程诉求等,处理结果将同步到对应家长端。</div>
-      ${renderTable(['日期','类型','来源','内容','状态','操作'], complaints.map(cp=>({日期:cp.date,类型:cp.type,来源:cp.parent,内容:cp.content,状态:badge(cp.status),操作:`<button class="btn btn-sm btn-primary" onclick="handleComplaint('${cp.id}')">处理</button> <button class="btn btn-sm btn-secondary" onclick="viewComplaint('${cp.id}')">查看</button>`})))}
+      ${renderTable(['日期','类型','来源','内容','处理人','处理时间','状态','操作'], complaints.map(cp=>({日期:cp.date,类型:cp.type,来源:cp.parent,内容:cp.content,处理人:cp.handler||'-',处理时间:cp.handleDate||'-',状态:badge(cp.status),操作:`<button class="btn btn-sm btn-primary" onclick="handleComplaint('${cp.id}')">处理</button> <button class="btn btn-sm btn-secondary" onclick="viewComplaint('${cp.id}')">查看</button>`})))}
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">家长课程诉求</div></div>
@@ -2709,12 +2746,20 @@ function handleComplaint(id){
   openModal('处理诉求 - '+cp.type, `
     <div class="detail-grid" style="margin-bottom:14px">
       <div class="detail-item"><div class="label">来源</div><div class="value">${cp.parent}</div></div>
-      <div class="detail-item"><div class="label">日期</div><div class="value">${cp.date}</div></div>
+      <div class="detail-item"><div class="label">登记日期</div><div class="value">${cp.date}</div></div>
       <div class="detail-item full"><div class="label">诉求内容</div><div class="value">${cp.content}</div></div>
     </div>
     <form id="handleComplaintForm">
+      <div class="form-row">
+        ${formGroup('处理人', inputText('handler', cp.handler||'','处理人姓名'))}
+        ${formGroup('处理时间', inputDate('handleDate', cp.handleDate||todayStr()))}
+      </div>
       ${formGroup('处理结果', inputTextarea('reply', cp.reply||'','请输入处理结果'))}
-      ${formGroup('状态', inputSelect('status',[{value:'处理中',label:'处理中'},{value:'已处理',label:'已处理'}], cp.status))}
+      ${formGroup('回复家长内容', inputTextarea('replyToParent', cp.replyToParent||'','将同步到家长端(选填)'))}
+      <div class="form-row">
+        ${formGroup('状态', inputSelect('status',[{value:'处理中',label:'处理中'},{value:'已处理',label:'已处理'},{value:'已关闭',label:'已关闭'}], cp.status))}
+        ${formGroup('满意度', inputSelect('satisfaction',[{value:'',label:'未评价'},{value:'满意',label:'满意'},{value:'一般',label:'一般'},{value:'不满意',label:'不满意'}], cp.satisfaction||''))}
+      </div>
     </form>
   `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitHandleComplaint('${id}')">提交</button>`);
 }
@@ -2723,8 +2768,12 @@ function submitHandleComplaint(id){
   const list = DB.get('complaints',[]);
   const cp = list.find(x=>x.id===id);
   if(cp){
+    cp.handler = form.handler.value;
+    cp.handleDate = form.handleDate.value;
     cp.reply = form.reply.value;
+    cp.replyToParent = form.replyToParent.value;
     cp.status = form.status.value;
+    cp.satisfaction = form.satisfaction.value;
     DB.set('complaints', list);
   }
   closeModal();
@@ -2737,10 +2786,14 @@ function viewComplaint(id){
   openModal('诉求详情 - '+cp.type, `
     <div class="detail-grid">
       <div class="detail-item"><div class="label">来源</div><div class="value">${cp.parent}</div></div>
-      <div class="detail-item"><div class="label">日期</div><div class="value">${cp.date}</div></div>
+      <div class="detail-item"><div class="label">登记日期</div><div class="value">${cp.date}</div></div>
       <div class="detail-item full"><div class="label">诉求内容</div><div class="value">${cp.content}</div></div>
+      <div class="detail-item"><div class="label">处理人</div><div class="value">${cp.handler||'-'}</div></div>
+      <div class="detail-item"><div class="label">处理时间</div><div class="value">${cp.handleDate||'-'}</div></div>
       <div class="detail-item full"><div class="label">处理结果</div><div class="value">${cp.reply||'尚未处理'}</div></div>
+      <div class="detail-item full"><div class="label">回复家长</div><div class="value">${cp.replyToParent||'-'}</div></div>
       <div class="detail-item"><div class="label">状态</div><div class="value">${badge(cp.status)}</div></div>
+      <div class="detail-item"><div class="label">满意度</div><div class="value">${cp.satisfaction||'未评价'}</div></div>
     </div>
   `, `<button class="btn btn-secondary" onclick="closeModal()">关闭</button>`);
 }
@@ -2951,6 +3004,7 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
       <div class="card-header"><div class="card-title">咨询汇总表导出</div><div>
         <button class="btn btn-primary btn-sm" onclick="printSummaryTable()">🖨️ 打印</button>
         <button class="btn btn-secondary btn-sm" onclick="exportSummaryCSV()">📥 导出CSV</button>
+        <button class="btn btn-success btn-sm" onclick="exportSummaryExcel()">📊 导出Excel</button>
       </div></div>
       <div class="alert alert-info">可导出打印儿童早期干预咨询汇总表,供上级主管单位检查。格式参照"2025年汕头市慧翔智能康复中心早期干预咨询汇总表"。</div>
       <div class="stat-grid">
@@ -2992,8 +3046,8 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
             <td>${d.homeAddr||''}</td>
             <td>${d.diagnosis||''}</td>
             <td>${d.consultDate||''}</td>
-            <td>${(d.consultContent||[]).join('、')}</td>
-            <td>${(d.guidance||[]).join('、')}</td>
+            <td>${(d.consultContent||[]).join(' / ')}</td>
+            <td>${(d.guidance||[]).join(' / ')}</td>
           </tr>`).join('') : `<tr><td colspan="12">${emptyState('暂无数据')}</td></tr>`}
         </tbody>
       </table>
@@ -3020,8 +3074,8 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
             <td>${d.birthDate||''}</td><td>${d.origin||''}</td>
             <td>${d.guardian1||''} ${d.guardian2||''}</td><td>${d.phone1||''} ${d.phone2||''}</td>
             <td>${d.homeAddr||''}</td><td>${d.diagnosis||''}</td>
-            <td>${d.consultDate||''}</td><td>${(d.consultContent||[]).join('、')}</td>
-            <td>${(d.guidance||[]).join('、')}</td>
+            <td>${d.consultDate||''}</td><td>${(d.consultContent||[]).join(' / ')}</td>
+            <td>${(d.guidance||[]).join(' / ')}</td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -3037,7 +3091,7 @@ function printSummaryTable(){ window.print(); }
 function exportSummaryCSV(){
   const list = DB.get('childDetails',[]);
   const headers = ['编号','孩子姓名','性别','出生日期','籍贯','监护人1','监护人2','联系方式1','联系方式2','家庭地址','诊断结果','咨询日期','入读时间','结业时间','咨询内容','指导建议'];
-  const rows = list.map((d,i)=>[i+1,d.childName,d.gender,d.birthDate,d.origin,d.guardian1,d.guardian2,d.phone1,d.phone2,d.homeAddr,d.diagnosis,d.consultDate,d.enrollDate,d.finishDate,(d.consultContent||[]).join('、'),(d.guidance||[]).join('、')]);
+  const rows = list.map((d,i)=>[i+1,d.childName,d.gender,d.birthDate,d.origin,d.guardian1,d.guardian2,d.phone1,d.phone2,d.homeAddr,d.diagnosis,d.consultDate,d.enrollDate,d.finishDate,(d.consultContent||[]).join(' / '),(d.guidance||[]).join(' / ')]);
   const csv = '﻿' + [headers, ...rows].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
@@ -3047,6 +3101,29 @@ function exportSummaryCSV(){
   a.click();
   URL.revokeObjectURL(url);
   toast('CSV已导出');
+}
+function exportSummaryExcel(){
+  const list = DB.get('childDetails',[]);
+  const config = DB.get('miniProgramConfig',{});
+  const headers = ['编号','孩子姓名','性别','出生日期','籍贯','监护人1','监护人2','联系方式1','联系方式2','家庭地址','诊断结果','咨询日期','入读时间','结业时间','咨询内容','指导建议'];
+  const rows = list.map((d,i)=>[i+1,d.childName||'',d.gender||'',d.birthDate||'',d.origin||'',d.guardian1||'',d.guardian2||'',d.phone1||'',d.phone2||'',d.homeAddr||'',d.diagnosis||'',d.consultDate||'',d.enrollDate||'',d.finishDate||'',(d.consultContent||[]).join(' / '),(d.guidance||[]).join(' / ')]);
+  const titleRow = (config.name||'慧智星儿童发展中心')+' - 早期干预咨询汇总表 ('+todayStr()+')';
+  const tableHtml = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>咨询汇总表</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>
+    <body>
+      <table><tr><td colspan="${headers.length}" style="font-weight:bold;font-size:14px;text-align:center">${titleRow}</td></tr></table>
+      <table border="1"><thead><tr>${headers.map(h=>`<th style="background:#f0f0f0;font-weight:bold">${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${(c||'').toString().replace(/</g,'&lt;')}</td>`).join('')}</tr>`).join('')}</tbody></table>
+    </body></html>`;
+  const blob = new Blob(['﻿'+tableHtml], {type:'application/vnd.ms-excel;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '咨询汇总表_'+todayStr()+'.xls';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Excel已导出');
 }
 
 /* ========== Init ========== */
