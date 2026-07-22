@@ -388,7 +388,8 @@ const NAV_MENUS = {
     { section:'档案信息管理', items:[
       {key:'admin-teacher-detail',label:'教师信息管理',icon:'👩‍🏫'},
       {key:'admin-child-info',label:'儿童信息管理',icon:'🧒'},
-      {key:'admin-parent-info',label:'家长信息管理',icon:'👨‍👩‍👧'},
+      // muted: 家长信息管理 — 儿童信息已包含家长信息,无需单独菜单
+      // {key:'admin-parent-info',label:'家长信息管理',icon:'👨‍👩‍👧'},
       {key:'admin-student-file',label:'学员档案录入',icon:'📁'},
       {key:'admin-new-student',label:'新生建档',icon:'✨'},
       {key:'admin-transfer',label:'转班/结业管理',icon:'🔄'}
@@ -571,9 +572,9 @@ function seedData(){
   ]);
   /* ===== New: Child detailed info ===== */
   DB.set('childDetails', [
-    { id:'cd1', childName:'小明', gender:'男', birthDate:'2021-05-08', origin:'广东汕头', guardian1:'林先生', guardian2:'陈女士', phone1:'13900001111', phone2:'13900002222', homeAddr:'汕头市金平区XX路XX号', diagnosis:'孤独症谱系障碍', consultDate:'2024-02-20', enrollDate:'2024-03-01', finishDate:'', consultContent:['课内'], guidance:['入训'], remark:'对声音敏感' },
-    { id:'cd2', childName:'小红', gender:'女', birthDate:'2022-08-15', origin:'广东揭阳', guardian1:'黄先生', guardian2:'吴女士', phone1:'13900003333', phone2:'13900004444', homeAddr:'汕头市龙湖区XX路XX号', diagnosis:'语言发育迟缓', consultDate:'2024-05-10', enrollDate:'2024-05-15', finishDate:'', consultContent:['课内','课外'], guidance:['入训'], remark:'喜欢音乐' },
-    { id:'cd3', childName:'小华', gender:'男', birthDate:'2020-03-20', origin:'广东潮州', guardian1:'刘先生', guardian2:'杨女士', phone1:'13900005555', phone2:'13900006666', homeAddr:'汕头市濠江区XX路XX号', diagnosis:'发育迟缓', consultDate:'2023-08-25', enrollDate:'2023-09-01', finishDate:'', consultContent:['课内','培训'], guidance:['入训','转介'], remark:'运动能力较弱' }
+    { id:'cd1', childName:'小明', gender:'男', birthDate:'2021-05-08', origin:'广东汕头', guardian1:'林先生', guardian2:'陈女士', phone1:'13900001111', phone2:'13900002222', homeAddr:'汕头市金平区XX路XX号', diagnosis:'孤独症谱系障碍', consultDate:'2024-02-20', enrollDate:'2024-03-01', finishDate:'', consultContent:['课内'], guidance:['入训'], status:'在训', remark:'对声音敏感' },
+    { id:'cd2', childName:'小红', gender:'女', birthDate:'2022-08-15', origin:'广东揭阳', guardian1:'黄先生', guardian2:'吴女士', phone1:'13900003333', phone2:'13900004444', homeAddr:'汕头市龙湖区XX路XX号', diagnosis:'语言发育迟缓', consultDate:'2024-05-10', enrollDate:'2024-05-15', finishDate:'', consultContent:['课内','课外'], guidance:['入训'], status:'在训', remark:'喜欢音乐' },
+    { id:'cd3', childName:'小华', gender:'男', birthDate:'2020-03-20', origin:'广东潮州', guardian1:'刘先生', guardian2:'杨女士', phone1:'13900005555', phone2:'13900006666', homeAddr:'汕头市濠江区XX路XX号', diagnosis:'发育迟缓', consultDate:'2023-08-25', enrollDate:'2023-09-01', finishDate:'', consultContent:['课内','培训'], guidance:['入训','转介'], status:'在训', remark:'运动能力较弱' }
   ]);
   /* ===== New: Parent info ===== */
   DB.set('parentInfos', [
@@ -849,7 +850,17 @@ PAGE_RENDERERS['parent-media'] = (c) => {
 function viewMedia(id){
   const m = DB.get('mediaAssets',[]).find(x=>x.id===id);
   if(!m) return;
-  openModal(m.name, `<div style="text-align:center"><div style="font-size:80px;margin:20px 0">${m.type==='video'?'🎬':'📷'}</div><p>${m.desc}</p><p style="color:var(--color-text-muted);font-size:13px">日期: ${m.date}</p></div>`, `<button class="btn btn-secondary" onclick="closeModal()">关闭</button>`);
+  let mediaContent = '';
+  if(m.url){
+    if(m.type==='video'){
+      mediaContent = `<video src="${m.url}" controls style="max-width:100%;max-height:400px;border-radius:8px"></video>`;
+    } else {
+      mediaContent = `<img src="${m.url}" style="max-width:100%;max-height:400px;border-radius:8px" />`;
+    }
+  } else {
+    mediaContent = `<div style="font-size:80px;margin:20px 0">${m.type==='video'?'🎬':'📷'}</div>`;
+  }
+  openModal(m.name, `<div style="text-align:center">${mediaContent}<p style="margin:12px 0 4px">${m.desc||''}</p><p style="color:var(--color-text-muted);font-size:13px">日期: ${m.date} | 学员: ${m.student||'-'}</p></div>`, `<button class="btn btn-secondary" onclick="closeModal()">关闭</button>`);
 }
 
 /* ---------- Parent: Notice ---------- */
@@ -1207,7 +1218,7 @@ PAGE_RENDERERS['teacher-upload'] = (c) => {
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">已上传素材</div></div>
-      ${media.length ? `<div class="media-grid">${media.map(m=>`<div class="media-item"><div style="display:flex;align-items:center;justify-content:center;height:100%;background:var(--color-muted);font-size:32px">${m.type==='video'?'🎬':'📷'}</div></div>`).join('')}</div>${renderTable(['日期','学员','类型','名称','描述'], media.map(m=>({日期:m.date,学员:m.student,类型:m.type==='video'?'视频':'照片',名称:m.name,描述:m.desc})))}` : emptyState('暂无素材')}
+      ${media.length ? `<div class="media-grid">${media.map(m=>`<div class="media-item" style="cursor:pointer" onclick="viewMedia('${m.id}')"><div style="display:flex;align-items:center;justify-content:center;height:100%;background:var(--color-muted);font-size:32px">${m.type==='video'?'🎬':'📷'}</div><div class="overlay"><button class="btn btn-sm btn-primary">查看</button></div></div>`).join('')}</div>${renderTable(['日期','学员','类型','名称','描述','操作'], media.map(m=>({日期:m.date,学员:m.student,类型:m.type==='video'?'视频':'照片',名称:m.name,描述:m.desc,操作:`<button class="btn btn-sm btn-secondary" onclick="viewMedia('${m.id}')">查看</button> <button class="btn btn-sm btn-danger" onclick="deleteMedia('${m.id}')">删除</button>`})))}` : emptyState('暂无素材')}
     </div>
   `;
 };
@@ -1215,14 +1226,20 @@ function handleMediaUpload(e){
   const file = e.target.files[0];
   if(!file) return;
   const students = DB.get('students',[]);
-  openModal('完善素材信息', `
-    <form id="mediaForm">
-      <p>文件: ${file.name}</p>
-      ${formGroup('学员', inputSelect('student', students.map(s=>({value:s.name,label:s.name}))))}
-      ${formGroup('类型', inputSelect('type',[{value:file.type.startsWith('video')?'video':'photo',label:file.type.startsWith('video')?'视频':'照片'}]))}
-      ${formGroup('描述', inputTextarea('desc','','请输入素材描述'))}
-    </form>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitMedia('${file.name}')">上传</button>`);
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const fileUrl = ev.target.result;
+    openModal('完善素材信息', `
+      <form id="mediaForm">
+        <p>文件: ${file.name}</p>
+        ${formGroup('学员', inputSelect('student', students.map(s=>({value:s.name,label:s.name}))))}
+        ${formGroup('类型', inputSelect('type',[{value:file.type.startsWith('video')?'video':'photo',label:file.type.startsWith('video')?'视频':'照片'}]))}
+        ${formGroup('描述', inputTextarea('desc','','请输入素材描述'))}
+      </form>
+    `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitMedia('${file.name.replace(/'/g,"\\'")}')">上传</button>`);
+    window._pendingFileUrl = fileUrl;
+  };
+  reader.readAsDataURL(file);
 }
 function submitMedia(fileName){
   const form = document.getElementById('mediaForm');
@@ -1233,12 +1250,20 @@ function submitMedia(fileName){
     date: todayStr(),
     type: form.type.value,
     name: fileName,
-    url: '',
+    url: window._pendingFileUrl || '',
     desc: form.desc.value
   });
   DB.set('mediaAssets', media);
   closeModal();
+  window._pendingFileUrl = null;
   toast('素材已上传');
+  navigate('teacher-upload');
+}
+function deleteMedia(id){
+  if(!confirm('确认删除该素材?')) return;
+  const media = DB.get('mediaAssets',[]).filter(x=>x.id!==id);
+  DB.set('mediaAssets', media);
+  toast('已删除');
   navigate('teacher-upload');
 }
 
@@ -2515,7 +2540,7 @@ PAGE_RENDERERS['admin-child-info'] = (c) => {
     <div class="card">
       <div class="card-header"><div class="card-title">儿童信息管理</div><button class="btn btn-primary btn-sm" onclick="openChildInfoModal()">录入儿童信息</button></div>
       <div class="alert alert-info">行政主管负责录入和查阅儿童详细信息,含基本信息、监护人、诊断、咨询与指导等。</div>
-      ${renderTable(['孩子姓名','性别','出生日期','监护人','联系方式','诊断结果','咨询日期','操作'], list.map(d=>({孩子姓名:d.childName,性别:d.gender,出生日期:d.birthDate,监护人:d.guardian1+' / '+d.guardian2,联系方式:d.phone1+' / '+d.phone2,诊断结果:d.diagnosis,咨询日期:d.consultDate,操作:`<button class="btn btn-sm btn-secondary" onclick="viewChildInfo('${d.id}')">查看</button> <button class="btn btn-sm btn-warning" onclick="editChildInfo('${d.id}')">编辑</button> <button class="btn btn-sm btn-danger" onclick="deleteChildInfo('${d.id}')">删除</button>`})))}
+      ${renderTable(['孩子姓名','性别','出生日期','监护人','联系方式','诊断结果','咨询日期','去向状态','操作'], list.map(d=>({孩子姓名:d.childName,性别:d.gender,出生日期:d.birthDate,监护人:d.guardian1+' / '+d.guardian2,联系方式:d.phone1+' / '+d.phone2,诊断结果:d.diagnosis,咨询日期:d.consultDate,去向状态:`<span class="tag ${d.status==='在训'?'tag-success':'tag-secondary'}">${d.status||'在训'}</span>`,操作:`<button class="btn btn-sm btn-secondary" onclick="viewChildInfo('${d.id}')">查看</button> <button class="btn btn-sm btn-warning" onclick="editChildInfo('${d.id}')">编辑</button> <button class="btn btn-sm btn-danger" onclick="deleteChildInfo('${d.id}')">删除</button>`})))}
     </div>
   `;
 };
@@ -2548,6 +2573,7 @@ function openChildInfoModal(id){
         ${formGroup('入读时间', inputDate('enrollDate', d.enrollDate||''))}
       </div>
       ${formGroup('结业时间', inputDate('finishDate', d.finishDate||''))}
+      ${formGroup('去向状态', inputSelect('status',[{value:'在训',label:'在训'},{value:'结业',label:'结业'}], d.status||'在训'))}
       <div class="form-group">
         <label>咨询内容(可多选)</label>
         <div class="check-group" id="consultContentGroup">
@@ -2587,6 +2613,7 @@ function submitChildInfo(id){
     consultDate: form.consultDate.value,
     enrollDate: form.enrollDate.value,
     finishDate: form.finishDate.value,
+    status: form.status.value,
     consultContent,
     guidance,
     remark: form.remark.value
@@ -2621,6 +2648,7 @@ function viewChildInfo(id){
       <div class="detail-item"><div class="label">咨询日期</div><div class="value">${d.consultDate||'-'}</div></div>
       <div class="detail-item"><div class="label">入读时间</div><div class="value">${d.enrollDate||'-'}</div></div>
       <div class="detail-item"><div class="label">结业时间</div><div class="value">${d.finishDate||'-'}</div></div>
+      <div class="detail-item"><div class="label">去向状态</div><div class="value"><span class="tag ${d.status==='结业'?'tag-secondary':'tag-success'}">${d.status||'在训'}</span></div></div>
       <div class="detail-item"><div class="label">咨询内容</div><div class="value">${cc}</div></div>
       <div class="detail-item"><div class="label">指导意见</div><div class="value">${gd}</div></div>
       <div class="detail-item full"><div class="label">备注</div><div class="value">${d.remark||'-'}</div></div>
@@ -2992,7 +3020,18 @@ function deleteMaterial(id){
   navigate('admin-material');
 }
 function downloadMaterial(id){
-  toast('素材下载已触发(演示)');
+  const m = DB.get('materials',[]).find(x=>x.id===id);
+  if(!m) return;
+  openModal(m.name, `
+    <div style="text-align:center;padding:20px 0">
+      <div style="width:64px;height:64px;border-radius:12px;background:${m.type==='word'?'#2b579a':'#217346'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;margin:0 auto 16px">${m.type==='word'?'W':'X'}</div>
+      <h3 style="margin:0 0 8px">${m.name}</h3>
+      <p style="color:var(--color-text-muted);font-size:13px;margin:0 0 4px">${m.type==='word'?'Word文档':'Excel表格'} | ${m.size||'未知'} | ${m.category||'未分类'}</p>
+      <p style="color:var(--color-text-muted);font-size:13px;margin:0 0 4px">上传人: ${m.uploader||'-'} | 上传日期: ${m.uploadDate||'-'}</p>
+      ${m.remark?`<p style="color:var(--color-text-muted);font-size:13px;margin:0 0 4px">备注: ${m.remark}</p>`:''}
+      <div class="alert alert-info" style="margin-top:16px;text-align:left">这是演示模式素材记录,实际部署后可关联真实文件下载。</div>
+    </div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="closeModal();toast('素材下载已触发(演示)')">下载</button>`);
 }
 
 /* ===== New: Admin - Export Summary Table (早期干预咨询汇总表) ===== */
@@ -3009,8 +3048,8 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
       <div class="alert alert-info">可导出打印儿童早期干预咨询汇总表,供上级主管单位检查。格式参照"2025年汕头市慧翔智能康复中心早期干预咨询汇总表"。</div>
       <div class="stat-grid">
         ${statCard('儿童总数', list.length)}
-        ${statCard('在读', list.filter(d=>!d.finishDate).length)}
-        ${statCard('已结业', list.filter(d=>d.finishDate).length)}
+        ${statCard('在训', list.filter(d=>(d.status||'在训')==='在训').length)}
+        ${statCard('已结业', list.filter(d=>d.status==='结业').length)}
       </div>
     </div>
     <div class="card no-print">
@@ -3032,6 +3071,7 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
             <th>咨询日期</th>
             <th>咨询内容</th>
             <th>指导建议</th>
+            <th>去向状态</th>
           </tr>
         </thead>
         <tbody>
@@ -3048,7 +3088,8 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
             <td>${d.consultDate||''}</td>
             <td>${(d.consultContent||[]).join(' / ')}</td>
             <td>${(d.guidance||[]).join(' / ')}</td>
-          </tr>`).join('') : `<tr><td colspan="12">${emptyState('暂无数据')}</td></tr>`}
+            <td>${d.status||'在训'}</td>
+          </tr>`).join('') : `<tr><td colspan="13">${emptyState('暂无数据')}</td></tr>`}
         </tbody>
       </table>
       <div style="margin-top:12px;font-size:12px;color:var(--color-text-muted);display:flex;justify-content:space-between">
@@ -3065,7 +3106,7 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
           <tr>
             <th>编号</th><th>孩子姓名</th><th>性别</th><th>出生日期</th><th>籍贯</th>
             <th>监护人</th><th>联系方式</th><th>家庭地址</th><th>诊断结果</th>
-            <th>咨询日期</th><th>咨询内容</th><th>指导建议</th>
+            <th>咨询日期</th><th>咨询内容</th><th>指导建议</th><th>去向状态</th>
           </tr>
         </thead>
         <tbody>
@@ -3075,7 +3116,7 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
             <td>${d.guardian1||''} ${d.guardian2||''}</td><td>${d.phone1||''} ${d.phone2||''}</td>
             <td>${d.homeAddr||''}</td><td>${d.diagnosis||''}</td>
             <td>${d.consultDate||''}</td><td>${(d.consultContent||[]).join(' / ')}</td>
-            <td>${(d.guidance||[]).join(' / ')}</td>
+            <td>${(d.guidance||[]).join(' / ')}</td><td>${d.status||'在训'}</td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -3090,8 +3131,8 @@ PAGE_RENDERERS['admin-export-summary'] = (c) => {
 function printSummaryTable(){ window.print(); }
 function exportSummaryCSV(){
   const list = DB.get('childDetails',[]);
-  const headers = ['编号','孩子姓名','性别','出生日期','籍贯','监护人1','监护人2','联系方式1','联系方式2','家庭地址','诊断结果','咨询日期','入读时间','结业时间','咨询内容','指导建议'];
-  const rows = list.map((d,i)=>[i+1,d.childName,d.gender,d.birthDate,d.origin,d.guardian1,d.guardian2,d.phone1,d.phone2,d.homeAddr,d.diagnosis,d.consultDate,d.enrollDate,d.finishDate,(d.consultContent||[]).join(' / '),(d.guidance||[]).join(' / ')]);
+  const headers = ['编号','孩子姓名','性别','出生日期','籍贯','监护人1','监护人2','联系方式1','联系方式2','家庭地址','诊断结果','咨询日期','入读时间','结业时间','咨询内容','指导建议','去向状态'];
+  const rows = list.map((d,i)=>[i+1,d.childName,d.gender,d.birthDate,d.origin,d.guardian1,d.guardian2,d.phone1,d.phone2,d.homeAddr,d.diagnosis,d.consultDate,d.enrollDate,d.finishDate,(d.consultContent||[]).join(' / '),(d.guidance||[]).join(' / '),d.status||'在训']);
   const csv = '﻿' + [headers, ...rows].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
@@ -3105,8 +3146,8 @@ function exportSummaryCSV(){
 function exportSummaryExcel(){
   const list = DB.get('childDetails',[]);
   const config = DB.get('miniProgramConfig',{});
-  const headers = ['编号','孩子姓名','性别','出生日期','籍贯','监护人1','监护人2','联系方式1','联系方式2','家庭地址','诊断结果','咨询日期','入读时间','结业时间','咨询内容','指导建议'];
-  const rows = list.map((d,i)=>[i+1,d.childName||'',d.gender||'',d.birthDate||'',d.origin||'',d.guardian1||'',d.guardian2||'',d.phone1||'',d.phone2||'',d.homeAddr||'',d.diagnosis||'',d.consultDate||'',d.enrollDate||'',d.finishDate||'',(d.consultContent||[]).join(' / '),(d.guidance||[]).join(' / ')]);
+  const headers = ['编号','孩子姓名','性别','出生日期','籍贯','监护人1','监护人2','联系方式1','联系方式2','家庭地址','诊断结果','咨询日期','入读时间','结业时间','咨询内容','指导建议','去向状态'];
+  const rows = list.map((d,i)=>[i+1,d.childName||'',d.gender||'',d.birthDate||'',d.origin||'',d.guardian1||'',d.guardian2||'',d.phone1||'',d.phone2||'',d.homeAddr||'',d.diagnosis||'',d.consultDate||'',d.enrollDate||'',d.finishDate||'',(d.consultContent||[]).join(' / '),(d.guidance||[]).join(' / '),d.status||'在训']);
   const titleRow = (config.name||'慧智星儿童发展中心')+' - 早期干预咨询汇总表 ('+todayStr()+')';
   const tableHtml = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
