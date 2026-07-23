@@ -1989,15 +1989,22 @@ PAGE_RENDERERS['admin-home'] = (c) => {
 };
 
 /* ---------- Admin: Account Management ---------- */
+let accountFilter = '全部';
 PAGE_RENDERERS['admin-account'] = (c) => {
   const accounts = DB.get('accounts',[]);
+  const roles = ['全部','康复老师','教学主管','行政主管','家长'];
+  const filtered = accountFilter === '全部' ? accounts : accounts.filter(a => a.role === accountFilter);
   c.innerHTML = `
     <div class="card">
       <div class="card-header"><div class="card-title">账号开通（新增/停用）</div><button class="btn btn-primary btn-sm" onclick="openAccountModal()">新增账号</button></div>
-      ${renderTable(['姓名','角色','电话','状态','创建日期'], accounts.map(a=>({姓名:a.name,角色:a.role,电话:a.phone,状态:badge(a.status),创建日期:a.createDate})), r=>`<button class="btn btn-sm ${r.状态.includes('启用')?'btn-warning':'btn-success'}" onclick="toggleAccount('${r.id}')">${r.状态.includes('启用')?'停用':'启用'}</button>`)}
+      <div class="tabs" style="margin-bottom:16px;">
+        ${roles.map(r => `<div class="tab ${accountFilter===r?'active':''}" onclick="filterAccount('${r}')">${r}</div>`).join('')}
+      </div>
+      ${filtered.length ? renderTable(['姓名','角色','电话','状态','创建日期'], filtered.map(a=>({姓名:a.name,角色:a.role,电话:a.phone,状态:badge(a.status),创建日期:a.createDate})), r=>`<button class="btn btn-sm ${r.状态.includes('启用')?'btn-warning':'btn-success'}" onclick="toggleAccount('${r.id}')">${r.状态.includes('启用')?'停用':'启用'}</button>`) : emptyState('该角色暂无账号')}
     </div>
   `;
 };
+function filterAccount(role){ accountFilter = role; navigate('admin-account'); }
 function openAccountModal(){
   openModal('新增账号', `
     <form id="accountForm">
