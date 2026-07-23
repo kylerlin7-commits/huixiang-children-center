@@ -541,7 +541,10 @@ function seedData(){
     { id:'ac1', name:'李老师', role:'康复老师', phone:'13800001111', status:'启用', createDate:'2023-06-01' },
     { id:'ac2', name:'王老师', role:'康复老师', phone:'13800002222', status:'启用', createDate:'2022-09-01' },
     { id:'ac3', name:'张主管', role:'教学主管', phone:'13800003333', status:'启用', createDate:'2021-03-01' },
-    { id:'ac4', name:'王主任', role:'行政主管', phone:'13800004444', status:'启用', createDate:'2020-01-01' }
+    { id:'ac4', name:'王主任', role:'行政主管', phone:'13800004444', status:'启用', createDate:'2020-01-01' },
+    { id:'ac5', name:'林先生', role:'家长', phone:'13900001111', status:'启用', createDate:'2024-03-01' },
+    { id:'ac6', name:'黄先生', role:'家长', phone:'13900003333', status:'启用', createDate:'2024-05-15' },
+    { id:'ac7', name:'刘先生', role:'家长', phone:'13900005555', status:'启用', createDate:'2023-09-01' }
   ]);
   DB.set('staffAttendance', [
     { id:'sa1', name:'李老师', date:'2026-07-19', status:'出勤', checkIn:'08:50', checkOut:'17:30' },
@@ -1999,23 +2002,48 @@ function openAccountModal(){
   openModal('新增账号', `
     <form id="accountForm">
       ${formGroup('姓名', inputText('name','','员工姓名'))}
-      ${formGroup('角色', inputSelect('role',[{value:'康复老师',label:'康复老师'},{value:'教学主管',label:'教学主管'},{value:'行政主管',label:'行政主管'}]))}
+      ${formGroup('角色', inputSelect('role',[{value:'康复老师',label:'康复老师'},{value:'教学主管',label:'教学主管'},{value:'行政主管',label:'行政主管'},{value:'家长',label:'家长'}]))}
       ${formGroup('电话', inputText('phone','','联系电话'))}
+      <div id="parentFields" style="display:none;">
+        ${formGroup('孩子姓名', inputText('childName','','孩子姓名'))}
+        ${formGroup('关系', inputSelect('relation',[{value:'父亲',label:'父亲'},{value:'母亲',label:'母亲'},{value:'其他',label:'其他'}]))}
+      </div>
     </form>
   `, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitAccount()">创建</button>`);
+  document.querySelector('#accountForm select[name="role"]').addEventListener('change', function(){
+    document.getElementById('parentFields').style.display = this.value === '家长' ? 'block' : 'none';
+  });
 }
 function submitAccount(){
   const form = document.getElementById('accountForm');
   const list = DB.get('accounts',[]);
-  list.push({
+  const role = form.role.value;
+  const newAccount = {
     id: DB.uid(),
     name: form.name.value,
-    role: form.role.value,
+    role: role,
     phone: form.phone.value,
     status: '启用',
     createDate: todayStr()
-  });
+  };
+  list.push(newAccount);
   DB.set('accounts', list);
+  if(role === '家长'){
+    const parents = DB.get('parentInfos',[]);
+    const childName = form.childName.value;
+    const childDetails = DB.get('childDetails',[]);
+    const matchedChild = childDetails.find(c => c.childName === childName);
+    parents.push({
+      id: DB.uid(),
+      phone: form.phone.value,
+      name: form.name.value,
+      child: childName,
+      relation: form.relation.value,
+      childId: matchedChild ? matchedChild.id : '',
+      remark: ''
+    });
+    DB.set('parentInfos', parents);
+  }
   closeModal();
   toast('账号已创建');
   navigate('admin-account');
@@ -2035,7 +2063,8 @@ PAGE_RENDERERS['admin-role'] = (c) => {
   const rolePerms = {
     '康复老师':'管理自己负责的学员,可编辑训练记录及媒体资料,无法修改机构全局设置、财务数据',
     '教学主管':'查看全机构学员、所有老师教学数据,拥有教学相关审核、编辑、统筹权限、行政财务权限',
-    '行政主管':'最高权限,所有功能均可查阅'
+    '行政主管':'最高权限,所有功能均可查阅',
+    '家长':'查看自己孩子的课程、课堂表现、成长档案、缴费记录,可请假、预约、提问、投诉'
   };
   c.innerHTML = `
     <div class="card"><div class="card-header"><div class="card-title">角色权限分配</div></div>${renderTable(['员工','当前角色','权限说明'], accounts.map(a=>({员工:a.name,当前角色:a.role,权限说明:rolePerms[a.role]||'-'})), r=>`<button class="btn btn-sm btn-primary" onclick="changeRole('${r.id}')">调整角色</button>`)}</div>
@@ -2045,7 +2074,7 @@ PAGE_RENDERERS['admin-role'] = (c) => {
 function changeRole(id){
   const list = DB.get('accounts',[]);
   const a = list.find(x=>x.id===id);
-  openModal('调整角色', `<p>员工: ${a?a.name:''}</p>${formGroup('新角色', inputSelect('role',[{value:'康复老师',label:'康复老师'},{value:'教学主管',label:'教学主管'},{value:'行政主管',label:'行政主管'}], a?a.role:''))}`, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitRoleChange('${id}')">确认</button>`);
+  openModal('调整角色', `<p>员工: ${a?a.name:''}</p>${formGroup('新角色', inputSelect('role',[{value:'康复老师',label:'康复老师'},{value:'教学主管',label:'教学主管'},{value:'行政主管',label:'行政主管'},{value:'家长',label:'家长'}], a?a.role:''))}`, `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="submitRoleChange('${id}')">确认</button>`);
 }
 function submitRoleChange(id){
   const newRole = document.querySelector('#modalBody select[name="role"]').value;
